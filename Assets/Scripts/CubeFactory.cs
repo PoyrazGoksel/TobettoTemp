@@ -11,6 +11,7 @@ public class CubeFactory : MonoBehaviour
     [SerializeField] private int _xSize;
     [SerializeField] private int _zSize;
     [SerializeField] private float _moveSpeed;
+    
     private List<Vector2Int> _spawnLocStack = new();
 
     private void Start()
@@ -18,6 +19,12 @@ public class CubeFactory : MonoBehaviour
         _spawnLocStack.Add(new Vector2Int(0, 0));
         StartCoroutine(CubeRainRoutine());
         StartCoroutine(InputListenerRoutine());
+    }
+
+    private void InstantiateCube(Vector3 newCubePos)
+    {
+        GameObject newObj = Instantiate(_cubePrefab, transform);
+        newObj.transform.localPosition = newCubePos;
     }
 
     private IEnumerator InputListenerRoutine()
@@ -92,11 +99,5 @@ public class CubeFactory : MonoBehaviour
             lastZ = randZ;
             yield return new WaitForSeconds(_seconds);
         }
-    }
-
-    private void InstantiateCube(Vector3 newCubePos)
-    {
-        GameObject newObj = Instantiate(_cubePrefab, transform);
-        newObj.transform.localPosition = newCubePos;
     }
 }
