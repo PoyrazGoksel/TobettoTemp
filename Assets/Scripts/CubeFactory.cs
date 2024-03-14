@@ -1,46 +1,102 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class CubeFactory : MonoBehaviour
 {
+    [SerializeField] private int _index = 10;
     [SerializeField] private GameObject _cubePrefab;
-    [SerializeField] private int _xAxis;
-    [SerializeField] private int _zAxis;
-    [SerializeField] private float _padding;
-    
-    private Vector3 _initPos;
+    [SerializeField] private float _seconds;
+    [SerializeField] private int _xSize;
+    [SerializeField] private int _zSize;
+    [SerializeField] private float _moveSpeed;
+    private List<Vector2Int> _spawnLocStack = new();
 
     private void Start()
     {
-        _initPos = transform.position;
-
-        CreateGrid();
+        _spawnLocStack.Add(new Vector2Int(0, 0));
+        StartCoroutine(CubeRainRoutine());
+        StartCoroutine(InputListenerRoutine());
     }
 
-    private void CreateGrid()
+    private IEnumerator InputListenerRoutine()
     {
-        _initPos = transform.position; //TODO: _initPos = benim pozisyonum
+        float moveDelta = _moveSpeed * Time.deltaTime;
 
-        float initX = _initPos.x; //TODO: initX ben.pos.x
-        
-        for(int x = 0; x < _xAxis; x ++)
+        while(true)
         {
-            float initZ = _initPos.z; //TODO: initX ben.pos.z
-            
-            for(int z = 0; z < _zAxis; z ++)
+            if(Input.GetKey(KeyCode.W))
             {
-                Vector3 newCubePos = new(initX, _initPos.y, initZ);
-                
-                InstantiateCube(newCubePos);
-                
-                initZ += _padding;
+                Vector3 currPos = transform.position;
+                currPos.z += moveDelta;
+                transform.position = currPos;
             }
             
-            initX += _padding;
+            if(Input.GetKey(KeyCode.S))
+            {
+                Vector3 currPos = transform.position;
+                currPos.z -= moveDelta;
+                transform.position = currPos;
+            }
+
+            if(Input.GetKey(KeyCode.D))
+            {
+                Vector3 currPos = transform.position;
+                currPos.x += moveDelta;
+                transform.position = currPos;
+            }
+            
+            if(Input.GetKey(KeyCode.A))
+            {
+                Vector3 currPos = transform.position;
+                currPos.x -= moveDelta;
+                transform.position = currPos;
+            }
+            
+            
+            yield return null;
+        }
+    }
+
+    private void Awake() {}
+
+    private IEnumerator CubeRainRoutine()
+    {
+        int lastX = 0;
+        int lastZ = 0;
+
+        while(true)
+        {
+            int randX = Random.Range(0, _xSize);
+            int randZ = Random.Range(0, _zSize);
+
+            if(lastX == randX && lastZ == randZ)
+            {
+                randX = _spawnLocStack[^1].x;
+                randZ = _spawnLocStack[^1].y;
+            }
+            
+            Vector3 newCubePos = new(randX, transform.position.y, randZ);
+
+            _spawnLocStack.Add(new Vector2Int(randX, randZ));
+
+            if(_spawnLocStack.Count > _index)
+            {
+                _spawnLocStack.Remove(_spawnLocStack[_index]);
+            }
+            
+            InstantiateCube(newCubePos);
+
+            lastX = randX;
+            lastZ = randZ;
+            yield return new WaitForSeconds(_seconds);
         }
     }
 
     private void InstantiateCube(Vector3 newCubePos)
     {
-        Instantiate(_cubePrefab, newCubePos, Quaternion.identity);
+        GameObject newObj = Instantiate(_cubePrefab, transform);
+        newObj.transform.localPosition = newCubePos;
     }
 }
